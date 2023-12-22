@@ -12,6 +12,13 @@ A Python program that visualizes motion in real-time.
 ## Description
 This program uses Python to visualize motion in real-time. It is designed to capture video from a camera and highlight areas of motion on the screen. 
 
+## Demo
+
+https://github.com/Leo-Aqua/Realtime-motion-camera/assets/88901298/e2f5cf23-8f4c-4fa7-8067-4f68f1a5df9c
+
+(recording slowes down footage)
+
+
 ## Installation
 To install the program, follow these steps:
 1. Clone the repository: `git clone https://github.com/Leo-Aqua/Realtime-motion-camera`

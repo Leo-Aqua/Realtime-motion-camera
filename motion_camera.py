@@ -33,7 +33,7 @@ def get_available_cameras():
         f"{device_index}: {device_name}"
         for device_index, device_name in enumerate(devices)
     ]
-    available_cameras.append("Local File (buggy)")
+    available_cameras.append("Local File")
     return available_cameras
 
 

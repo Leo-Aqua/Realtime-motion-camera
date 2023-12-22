@@ -4,6 +4,8 @@ A Python program that visualizes motion in real-time.
 
 ## Table of Contents
 - [Description](#description)
+- [Demo](#demo)
+- [UI](#ui)
 - [Installation](#installation)
 - [Usage](#usage)
 - [License](#license)

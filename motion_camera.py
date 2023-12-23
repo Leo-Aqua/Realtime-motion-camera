@@ -9,7 +9,7 @@ import webbrowser
 DELAY_FRAMES = 3
 WIDTH, HEIGHT = 640, 480
 VIDEO_PATH = ""
-FRAMERATE = 60
+FRAMERATE = 30
 RECORDING = False
 OUTPUT_PATH = ""
 OUTPUT_VIDEO_WRITER = None
@@ -87,6 +87,16 @@ def update_frame():
     ret1, frame1 = cap1.read()
     ret2, frame2 = cap2.read()
 
+    if frame1 is None or frame2 is None:
+        print("Error: frame is None.")
+        return
+
+    if not ret1 or not ret2:
+        print("Error: Could not read frames.")
+        DRAW_FRAME = False
+    else:
+        DRAW_FRAME = True
+
     try:
         frame1 = cv2.resize(frame1, (WIDTH, HEIGHT))
         frame2 = cv2.resize(frame2, (WIDTH, HEIGHT))
@@ -97,11 +107,16 @@ def update_frame():
 
     frame_buffer.append(frame2)
 
-    if len(frame_buffer) > DELAY_FRAMES:
+    if len(frame_buffer) > DELAY_FRAMES and DRAW_FRAME:
         delayed_frame = frame_buffer.pop(0)
-        alpha = 0.5
-        blended_frame = cv2.addWeighted(frame1, alpha, delayed_frame, alpha, 0)
-        cv2.imshow("Motion Camera", blended_frame)
+        ALPHA = color_slider.get()
+        ALPHA2 = 1 - ALPHA
+        blended_frame = cv2.addWeighted(frame1, ALPHA, delayed_frame, ALPHA2, 0)
+
+
+        blended_frame_scaled = resize_frame(blended_frame, width=700)
+
+        cv2.imshow("Motion Camera", blended_frame_scaled)
 
         
         if RECORDING:
@@ -112,47 +127,28 @@ def update_frame():
     root.after(delay, update_frame)
 
 
+def resize_frame(frame, width):
+    aspect_ratio = frame.shape[1] / frame.shape[0]
+    height = int(width / aspect_ratio)
+    resized_frame = cv2.resize(frame, (width, height))
+    return resized_frame
+
+
 def select_camera():
-    """
-    Selects a camera and initializes it for capturing frames.
-
-    Parameters:
-        None
-
-    Returns:
-        None
-    """
     global cap1, cap2, frame_buffer, WIDTH, HEIGHT
-    cap1 = initialize_camera(camera_combobox.get())
-    cap2 = initialize_camera(camera_combobox.get())
+    cap1 = cap2 = initialize_camera(camera_combobox.get())
     WIDTH = int(cap1.get(cv2.CAP_PROP_FRAME_WIDTH))
     HEIGHT = int(cap2.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    print(WIDTH , HEIGHT)
     frame_buffer = []
     update_frame()
 
 
 def start_camera():
-    """
-    Starts the camera and begins capturing video frames.
-
-    This function initializes the necessary variables and settings for capturing video frames from the camera.
-    It first checks if the selected device is a local file or a camera. If it is a local file, it prompts the user
-    to select a video file and sets the VIDEO_PATH variable to the selected file path. It then calls the
-    get_video_dimensions() function to retrieve the width, height, and framerate of the video file. If the
-    selected device is a camera, it sets the VIDEO_PATH variable to an empty string.
-
-    After initializing the necessary variables and settings, the function creates a new thread and starts it.
-    The thread calls the select_camera() function, which is responsible for capturing video frames from the camera.
-
-    This function does not have any parameters.
-
-    This function does not have a return value.
-    """
-    global stop_camera_flag, VIDEO_PATH, FRAMERATE
-    stop_camera_flag = False
+    stop_camera()
+    global VIDEO_PATH, FRAMERATE, DELAY_FRAMES, WIDTH, HEIGHT
 
     selected_device = camera_combobox.get()
+    initialize_camera(selected_device)
 
     if selected_device == "Local File":
         VIDEO_PATH = filedialog.askopenfilename(filetypes=[("Video Files", "*.mp4;*.avi;*.mkv;*.mov")])
@@ -161,15 +157,14 @@ def start_camera():
         WIDTH, HEIGHT, FRAMERATE = get_video_dimensions(VIDEO_PATH)
     else:
         VIDEO_PATH = ""
-
+    DELAY_FRAMES = slider.get()
     thread = threading.Thread(target=select_camera)
     thread.start()
 
 
 def start_recording():
+    global RECORDING, OUTPUT_VIDEO_WRITER, OUTPUT_PATH
     """
-    Toggles the recording state.
-
     The function checks the global variable RECORDING to determine if the recording is currently ongoing. If it is, the function stops the recording by setting RECORDING to False. It also releases the video writer instance, sets it to None, and updates the record label text to "Recording: No". If the recording is not ongoing, the function prompts the user to select an output path using filedialog.asksaveasfilename(). If a valid output path is selected, the function sets RECORDING to True, initializes a video writer instance using cv2.VideoWriter(), and updates the record label text to "Recording: Yes".
 
     Parameters:
@@ -194,7 +189,7 @@ def start_recording():
 
         if OUTPUT_PATH:
             RECORDING = True
-            fourcc = cv2.VideoWriter_fourcc(*"XVID")
+            fourcc = cv2.VideoWriter_fourcc('m','p','4','v')
             OUTPUT_VIDEO_WRITER = cv2.VideoWriter(OUTPUT_PATH, fourcc, FRAMERATE/4, (WIDTH, HEIGHT))
             record_label.config(text="Recording: Yes")
 
@@ -218,15 +213,8 @@ def get_video_dimensions(file_path):
 
 
 def stop_camera():
+    global RECORDING, OUTPUT_VIDEO_WRITER
     """
-    Stops the camera capture, releases resources, and closes any open windows.
-
-    This function sets the `stop_camera_flag` global variable to `True` to signal the camera capture loop to stop.
-
-    It releases the camera capture objects `cap1` and `cap2` using the `release()` method.
-
-    It closes any open windows using the `destroyAllWindows()` method.
-
     If the `RECORDING` flag is `True`, it sets it to `False`. If the `OUTPUT_VIDEO_WRITER` object is not `None`, it releases it using the `release()` method.
 
     Parameters:
@@ -263,7 +251,7 @@ def on_close():
 
 root = tk.Tk()
 root.title("Motion Camera by LeoAqua")
-root.geometry("350x350")
+root.geometry("350x400")
 root.resizable(False, False)
 
 text1 = ttk.Label(root, text="Device:", font=("Arial", 12))
@@ -288,6 +276,13 @@ text3.pack()
 slider = tk.Scale(root, from_=1, to=50, orient=tk.HORIZONTAL)
 slider.pack()
 
+color_label = ttk.Label(root, text="Color") 
+color_label.pack()
+
+color_slider = tk.Scale(root, from_=.5, to=1, orient=tk.HORIZONTAL, resolution=.01)
+color_slider.set(.5)
+color_slider.pack()
+
 record_label = ttk.Label(root, text="Recording: No")
 record_label.pack()
 
@@ -301,7 +296,9 @@ def callback(link):
     webbrowser.open_new(link)
 
 link = tk.Label(root, text="My GitHub", fg="blue", cursor="hand2")
-link.bind("<Button-1>", lambda e: webbrowser.open_new_tab("https://github.com/Leo-Aqua"))
+link.bind
+
+("<Button-1>", lambda e: webbrowser.open_new_tab("https://github.com/Leo-Aqua"))
 link.pack()
 
 link2 = tk.Label(root, text="Posy's YT", fg="blue", cursor="hand2")

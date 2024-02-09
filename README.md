@@ -22,7 +22,7 @@ This program uses Python to visualize motion in real-time. It is designed to cap
 
 ## UI
 
-![image](https://github.com/Leo-Aqua/Realtime-motion-camera/assets/88901298/4f7e6313-6516-4438-b63b-f676b29602b4)
+![image](https://github.com/Leo-Aqua/Realtime-motion-camera/assets/88901298/65290762-77dd-4967-8eb3-6d00fda2b478)
 
 
 
@@ -36,6 +36,7 @@ To use the program, follow these steps:
 1. Open a terminal or command prompt.
 2. Navigate to the project directory.
 3. Run the program: `python motion_camera.py`
+4. To record check the record checkbox (output will be in same folder as .py file named 'output.avi')
 
 ## License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.

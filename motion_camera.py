@@ -105,7 +105,7 @@ class WebcamApp:
 
 def main():
     root = tk.Tk()
-    app = WebcamApp(root, "Webcam Application")
+    app = WebcamApp(root, "MotionCam")
     
 if __name__ == '__main__':
     main()

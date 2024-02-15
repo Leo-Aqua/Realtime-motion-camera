@@ -64,7 +64,7 @@ class WebcamApp:
     
     def update(self):
         self.framecounter += 1
-        
+
         ret, frame = self.vid.read()
         show_debug = self.debug_info_check_var.get()
         try:
@@ -76,25 +76,52 @@ class WebcamApp:
             if new_delay < self.delay_frames:
                 self.framebuffer.clear()
             self.delay_frames = new_delay
-            
+
             # Apply transparency and inversion
-            
+
             delayed_frame = ~frame # invert Image
             blended_frame = None
             self.framebuffer.append(delayed_frame)
             if len(self.framebuffer) > self.delay_frames + 1:
                 delayed_frame = self.framebuffer.pop(0)
                 blended_frame = cv2.addWeighted(frame, 0.5, delayed_frame, 0.5, 0)
-            
+
                 h, w, _ = blended_frame.shape
                 if h > 600 or w > 800:
                     frame = cv2.resize(frame, (800, 600))
-                if show_debug : #               image,           text,                  org,     fontFace,          fontScale, color, thickness, lineType
-                    blended_frame = cv2.putText(blended_frame, "frame: " + str(self.framecounter), (50, 50), cv2.FONT_HERSHEY_SIMPLEX, .5, (255,0,0), 1, cv2.LINE_AA)
-                    blended_frame = cv2.putText(blended_frame, "delay: " + str(self.delay_frames), (50, 70), cv2.FONT_HERSHEY_SIMPLEX, .5, (255,0,0), 1, cv2.LINE_AA)
-                    blended_frame = cv2.putText(blended_frame, "recording: " + str(self.recording_check_var.get()), (50, 90), cv2.FONT_HERSHEY_SIMPLEX, .5, (255,0,0), 1, cv2.LINE_AA)
+                if show_debug: #               image,           text,                  org,     fontFace,          fontScale, color, thickness, lineType
+                    blended_frame = cv2.putText(
+                        blended_frame,
+                        f"frame: {self.framecounter}",
+                        (50, 50),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.5,
+                        (255, 0, 0),
+                        1,
+                        cv2.LINE_AA,
+                    )
+                    blended_frame = cv2.putText(
+                        blended_frame,
+                        f"delay: {str(self.delay_frames)}",
+                        (50, 70),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.5,
+                        (255, 0, 0),
+                        1,
+                        cv2.LINE_AA,
+                    )
+                    blended_frame = cv2.putText(
+                        blended_frame,
+                        f"recording: {str(self.recording_check_var.get())}",
+                        (50, 90),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.5,
+                        (255, 0, 0),
+                        1,
+                        cv2.LINE_AA,
+                    )
 
-                
+
                 # Convert overlayed_frame to PhotoImage
                 self.photo = ImageTk.PhotoImage(image=Image.fromarray(blended_frame))
                 self.canvas.create_image(0, 0, image=self.photo, anchor=tk.NW)
